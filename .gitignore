@@ -1,0 +1,27 @@
+node_modules/
+dist/
+.npm-cache/
+.cargo/
+.DS_Store
+*.log
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# 测试用一次性 SSH 密钥（B 期联调，结束后删除）
+.testssh/
+
+# 本地联调数据（加密库/演示数据）
+.devdata/
+
+# FinalShell 脱敏样本（不要提交真实配置）
+testdata/
+
+# 公开发布：不提交本地构建包
+*.zip
+*.dmg
+release/
+
+# 带真实主机信息的截图不进入公开仓库
+docs/screenshot*.png

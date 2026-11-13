@@ -1,0 +1,54 @@
+[package]
+name = "nestterm"
+version = "0.1.0"
+description = "NestTerm - 跨平台 SSH/SFTP 运维客户端"
+edition = "2021"
+rust-version = "1.85"
+
+[lib]
+# Tauri 约定：桌面端复用 lib 形式以便未来接入移动端入口。
+name = "nestterm_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-dragout = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "time", "macros", "fs", "io-util"] }
+# SSH 核心：纯 Rust 实现，禁止调用系统 ssh 子进程。
+# 加密后端选 ring（arm64/Windows/Linux 均免 CMake），需要 RSA 私钥支持故开启 rsa feature。
+russh = { version = "0.65", default-features = false, features = ["ring", "rsa"] }
+russh-sftp = "3.0.1"
+base64 = "0.22"
+thiserror = "2"
+log = "0.4"
+env_logger = "0.11"
+
+# 加密存储：SQLCipher（vendored OpenSSL，避免依赖系统 OpenSSL/LibreSSL）
+rusqlite = { version = "0.41", features = ["bundled-sqlcipher-vendored-openssl"] }
+uuid = { version = "1", features = ["v7"] }
+zeroize = "1"
+hex = "0.4"
+getrandom = "0.3"
+
+# 系统钥匙串：按平台启用最小编译面（macOS Keychain / Windows Credential Manager / Linux Secret Service）
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3", default-features = false, features = ["apple-native"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+keyring = { version = "3", default-features = false, features = ["windows-native"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+keyring = { version = "3", default-features = false, features = ["sync-secret-service"] }
+
+# 发布体积敏感：LTO + 单 codegen unit；opt-level="s" 在体积与终端渲染性能间取平衡。
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
